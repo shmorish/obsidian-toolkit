@@ -1,0 +1,18 @@
+name: check
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: 型チェック
+        run: npx tsc -p .
+      - name: 変換できるか
+        run: PATH="$PWD/node_modules/.bin:$PATH" ./build.sh dist && ls dist/plugin/main.js dist/themes/Mono/theme.css
