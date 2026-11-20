@@ -1,8 +1,6 @@
-import { App, Component, Keymap, TFile, moment as obsidianMoment, normalizePath } from "obsidian";
+import { App, Component, Keymap, TFile, normalizePath } from "obsidian";
 import type { Moment } from "moment";
-
-// obsidian の型定義は moment を `import * as` で出しているので、TS 7 では呼び出せない型になる。moment 本体の型に直す
-const moment = obsidianMoment as unknown as typeof import("moment");
+import { fill, moment } from "./templates";
 
 // 左サイドバーの一番上（アイコン行の下、フォルダ一覧の上）に埋め込む月カレンダー。日付をクリックすると、その日の Daily ノートを開く（なければ作る）。
 // Daily ノートの置き場所・名前の形式・テンプレートは、コアの「デイリーノート」の設定をそのまま使う
@@ -28,22 +26,12 @@ function dateOf(d: Daily, file: TFile | null): Moment | null {
   return date.isValid() ? date : null;
 }
 
-// コアのテンプレートと同じく {{date}} {{time}} {{title}} と {{date:形式}} を埋める。日付はクリックした日
-function fill(text: string, d: Daily, date: Moment): string {
-  return text.replace(/{{\s*(date|time|title)\s*(?::(.*?))?\s*}}/gi, (_, key: string, fmt?: string) => {
-    key = key.toLowerCase();
-    if (key === "title") return date.format(d.format);
-    if (key === "time") return moment().format(fmt?.trim() || "HH:mm");
-    return date.format(fmt?.trim() || d.format);
-  });
-}
-
 async function createDaily(app: App, d: Daily, date: Moment): Promise<TFile> {
   const path = pathOf(d, date);
   const dir = path.slice(0, path.lastIndexOf("/"));
   if (dir && !app.vault.getAbstractFileByPath(dir)) await app.vault.createFolder(dir);
   const tpl = d.template && app.metadataCache.getFirstLinkpathDest(d.template, "");
-  return app.vault.create(path, tpl ? fill(await app.vault.read(tpl), d, date) : "");
+  return app.vault.create(path, tpl ? fill(await app.vault.read(tpl), date.format(d.format), date, d.format) : "");
 }
 
 export class Calendar extends Component {

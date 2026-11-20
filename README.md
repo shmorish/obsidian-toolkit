@@ -1,6 +1,6 @@
 # obsidian-toolkit
 
-[Obsidian](https://obsidian.md) の拡張（プラグイン・テーマなど）をすべて管理する repo。community プラグインやテーマは入れず、必要なものだけをここに書く。プラグインは TypeScript、テーマは CSS で書く。
+[Obsidian](https://obsidian.md) の拡張（プラグイン・テーマなど）をすべて管理する repo。必要なものは基本ここに書く。自作するには重いもの（今は Tasks）だけ、community プラグインを [dotfiles](https://github.com/shmorish/dotfiles) の `nix/obsidian.nix` でバージョン固定で入れる。プラグインは TypeScript、テーマは CSS で書く。
 
 ## 中身
 
@@ -8,6 +8,8 @@
 |---|---|
 | `main.ts`, `manifest.json` | 自作プラグイン `toolkit` |
 | `calendar.ts` | 左サイドバーの一番上に埋め込む月カレンダー。日付をクリックするとその日の Daily ノートを開く（なければ作る） |
+| `templates.ts` | フォルダごとのテンプレート。指定したフォルダに空のノートを作ると、テンプレートの中身を入れる（対応はファイル内の `FOLDER_TEMPLATES`） |
+| `autogit.ts` | Vault の自動バックアップ。起動時に pull し、1 分ごとに変更があれば commit → pull → push する。コマンド「git: 今すぐバックアップ」「git: pull」もある |
 | `styles.css` | `toolkit` の UI 用 CSS。Tailwind で変換する |
 | `themes/Mono/` | 色を使わないミニマルテーマ |
 
