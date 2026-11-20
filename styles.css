@@ -1,0 +1,17 @@
+/* プラグインの UI 用。build.sh が Tailwind で変換して plugin/styles.css に置き、Obsidian が自動で読む。
+   preflight は Obsidian 本体の見た目を崩すので入れない。クラスは tw: 接頭辞つき（例: tw:flex）。 */
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* 色は Obsidian の変数だけにして、テーマを替えたら追従させる（例: tw:text-muted, tw:bg-secondary） */
+@theme inline {
+  --color-*: initial;
+  --color-normal: var(--text-normal);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--interactive-accent);
+  --color-primary: var(--background-primary);
+  --color-secondary: var(--background-secondary);
+  --color-border: var(--background-modifier-border);
+}

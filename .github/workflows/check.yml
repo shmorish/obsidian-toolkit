@@ -6,6 +6,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,4 +17,15 @@ jobs:
       - name: 型チェック
         run: npx tsc -p .
       - name: 変換できるか
-        run: PATH="$PWD/node_modules/.bin:$PATH" ./build.sh dist && ls dist/plugin/main.js dist/themes/Mono/theme.css
+        run: PATH="$PWD/node_modules/.bin:$PATH" ./build.sh dist && ls dist/plugin/main.js dist/plugin/styles.css dist/themes/Mono/theme.css
+      # main で manifest.json の version に当たる Release がまだなければ、タグごと作って変換結果を置く。
+      # dotfiles はこれを取ってきて Vault にコピーする
+      - name: Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$(jq -r .version manifest.json)"
+          if gh release view "$tag" >/dev/null 2>&1; then echo "$tag は作成済み"; exit 0; fi
+          tar -czf obsidian-toolkit.tar.gz -C dist plugin themes
+          gh release create "$tag" obsidian-toolkit.tar.gz --target "$GITHUB_SHA" --generate-notes
