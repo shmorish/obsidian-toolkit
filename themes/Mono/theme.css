@@ -113,3 +113,122 @@ body {
   text-decoration-color: var(--text-faint);
   text-underline-offset: 3px;
 }
+
+/* Tasks の検索結果: 絵文字をやめて 1 件ずつ控えめなカードにする。差し色はカレンダーと同じ紫だけ。
+   期限は「期限切れ」「今日」「明日」「予定」のラベル、優先度が高いものは左端の線で示す。
+   リンク・編集・延期のボタンはカーソルを乗せたときだけ出す */
+.plugin-tasks-query-result {
+  --checkbox-color: var(--color-purple);
+  --checkbox-color-hover: var(--color-purple);
+  --checkbox-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+}
+.plugin-tasks-query-result .plugin-tasks-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: var(--background-secondary);
+}
+/* Obsidian の ul>li.task-list-item>.task-list-item-checkbox がチェックボックスを左へはみ出させるので、それより詳しく指す */
+.plugin-tasks-query-result > li.plugin-tasks-list-item > .task-list-item-checkbox {
+  margin: 0;
+  flex: none;
+}
+.plugin-tasks-query-result .tasks-list-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.plugin-tasks-query-result .task-description {
+  flex: 1;
+}
+.plugin-tasks-query-result li[data-task-priority="high"],
+.plugin-tasks-query-result li[data-task-priority="highest"] {
+  box-shadow: inset 3px 0 0 var(--color-purple);
+}
+
+/* 絵文字を消して、代わりにラベルを出す */
+.plugin-tasks-query-result .task-priority,
+.plugin-tasks-query-result .task-due > span,
+.plugin-tasks-query-result .task-recurring > span {
+  display: none;
+}
+.plugin-tasks-query-result .task-due::after,
+.plugin-tasks-query-result .task-recurring::after {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border);
+  white-space: nowrap;
+}
+.plugin-tasks-query-result .task-recurring::after { content: "繰り返し"; }
+.plugin-tasks-query-result .task-due::after { content: "予定"; }
+.plugin-tasks-query-result .task-due[data-task-due="future-1d"]::after { content: "明日"; }
+.plugin-tasks-query-result .task-due[data-task-due="today"]::after {
+  content: "今日";
+  color: var(--color-purple);
+  border-color: var(--color-purple);
+}
+.plugin-tasks-query-result .task-due[data-task-due^="past"]::after {
+  content: "期限切れ";
+  color: #fff;
+  background-color: var(--color-purple);
+  border-color: var(--color-purple);
+}
+
+.plugin-tasks-query-result .task-extras {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  filter: grayscale(1);
+  transition: opacity 0.15s;
+}
+.plugin-tasks-query-result .plugin-tasks-list-item:hover .task-extras {
+  opacity: 0.7;
+}
+
+/* 絞り込み欄と件数 */
+.plugin-tasks-toolbar label {
+  border: none;
+  border-radius: 8px;
+  background-color: var(--background-secondary);
+}
+.plugin-tasks-toolbar input {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+.task-count {
+  margin-top: 8px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+/* Daily の Task Board（cssclasses: daily のノートだけ）。Today などの見出しを紫にし、Tasks の検索結果を紫の細い枠で囲む。
+   callout で囲むと、ライブプレビューでチェックボックスを押しても Tasks がタスクの行を見つけられず、一覧も出なくなるので使わない */
+.daily h3,
+.daily .HyperMD-header-3 {
+  color: var(--color-purple);
+  font-size: var(--font-ui-medium);
+}
+.daily .block-language-tasks {
+  padding: 12px 16px;
+  border: 1px solid color-mix(in oklch, var(--color-purple) 35%, transparent);
+  border-radius: 10px;
+}
+.daily .block-language-tasks .task-count {
+  margin-top: 4px;
+}
+/* 見た目を切り替えるための cssclasses しか持たないので、Daily ではプロパティ欄を出さない */
+.daily {
+  --metadata-display-editing: none;
+  --metadata-display-reading: none;
+}
