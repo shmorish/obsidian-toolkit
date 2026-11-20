@@ -7,6 +7,7 @@
 | パス | 中身 |
 |---|---|
 | `main.ts`, `manifest.json` | 自作プラグイン `toolkit` |
+| `calendar.ts` | 左サイドバーの月カレンダー。日付をクリックするとその日の Daily ノートを開く |
 | `styles.css` | `toolkit` の UI 用 CSS。Tailwind で変換する |
 | `themes/Mono/` | 色を使わないミニマルテーマ |
 
