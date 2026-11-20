@@ -214,20 +214,22 @@ body {
   color: var(--text-faint);
 }
 
-/* Daily の Task Board（cssclasses: daily のノートだけ）。Today などの見出しを紫にし、Tasks の検索結果を紫の細い枠で囲む。
+/* Tasks の検索結果は、どのノートでも紫の細い枠で囲む（Daily の Task Board、1on1 の前回からのアクションなど）。
    callout で囲むと、ライブプレビューでチェックボックスを押しても Tasks がタスクの行を見つけられず、一覧も出なくなるので使わない */
-.daily h3,
-.daily .HyperMD-header-3 {
-  color: var(--color-purple);
-  font-size: var(--font-ui-medium);
-}
-.daily .block-language-tasks {
+.block-language-tasks {
   padding: 12px 16px;
   border: 1px solid color-mix(in oklch, var(--color-purple) 35%, transparent);
   border-radius: 10px;
 }
-.daily .block-language-tasks .task-count {
+.block-language-tasks .task-count {
   margin-top: 4px;
+}
+
+/* Daily（cssclasses: daily のノート）では、Today などの見出しも紫にする */
+.daily h3,
+.daily .HyperMD-header-3 {
+  color: var(--color-purple);
+  font-size: var(--font-ui-medium);
 }
 /* 見た目を切り替えるための cssclasses しか持たないので、Daily ではプロパティ欄を出さない */
 .daily {
