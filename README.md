@@ -7,7 +7,7 @@
 | パス | 中身 |
 |---|---|
 | `main.ts`, `manifest.json` | 自作プラグイン `toolkit` |
-| `calendar.ts` | 左サイドバーの月カレンダー。日付をクリックするとその日の Daily ノートを開く |
+| `calendar.ts` | 左サイドバーの一番上に埋め込む月カレンダー。日付をクリックするとその日の Daily ノートを開く（なければ作る） |
 | `styles.css` | `toolkit` の UI 用 CSS。Tailwind で変換する |
 | `themes/Mono/` | 色を使わないミニマルテーマ |
 
@@ -15,8 +15,10 @@
 
 ```sh
 make check   # 型チェック
-make dev     # 変換して ~/Private/obsidian/.obsidian に置く。Obsidian で「Reload app without saving」を実行すると読み込まれる
+make dev     # 変換して ~/Private/obsidian/.obsidian に置き、Obsidian にプラグインを読み込み直させる
 ```
+
+`make dev` は Obsidian の CLI を使うので、設定 → 一般 → 詳細設定 でオンにしておく。エラーは `obsidian dev:errors`、画面は `obsidian dev:screenshot path=…` で確かめられる。
 
 テーマの CSS を手早く試すときは、Vault の `.obsidian/themes/Mono/theme.css` を直接書き換えて再読み込みし、決まったらここに写す。
 

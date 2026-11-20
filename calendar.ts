@@ -1,13 +1,11 @@
-import { App, ItemView, Keymap, Modal, Setting, TFile, moment as obsidianMoment, normalizePath } from "obsidian";
+import { App, Component, Keymap, TFile, moment as obsidianMoment, normalizePath } from "obsidian";
 import type { Moment } from "moment";
 
 // obsidian の型定義は moment を `import * as` で出しているので、TS 7 では呼び出せない型になる。moment 本体の型に直す
 const moment = obsidianMoment as unknown as typeof import("moment");
 
-// サイドバーの月カレンダー。日付をクリックすると、その日の Daily ノートを開く（なければ確認して作る）。
+// 左サイドバーの一番上（アイコン行の下、フォルダ一覧の上）に埋め込む月カレンダー。日付をクリックすると、その日の Daily ノートを開く（なければ作る）。
 // Daily ノートの置き場所・名前の形式・テンプレートは、コアの「デイリーノート」の設定をそのまま使う
-export const VIEW_CALENDAR = "toolkit-calendar";
-
 type Daily = { folder: string; format: string; template: string };
 
 async function dailySettings(app: App): Promise<Daily> {
@@ -48,35 +46,25 @@ async function createDaily(app: App, d: Daily, date: Moment): Promise<TFile> {
   return app.vault.create(path, tpl ? fill(await app.vault.read(tpl), d, date) : "");
 }
 
-class ConfirmModal extends Modal {
-  constructor(app: App, message: string, onYes: () => void) {
-    super(app);
-    this.setTitle(message);
-    new Setting(this.contentEl)
-      .addButton((b) =>
-        b.setButtonText("作成").setCta().onClick(() => {
-          this.close();
-          onYes();
-        }),
-      )
-      .addButton((b) => b.setButtonText("やめる").onClick(() => this.close()));
-  }
-}
-
-export class CalendarView extends ItemView {
+export class Calendar extends Component {
   private month = moment().startOf("month");
+  private el = createDiv({ cls: "tw:flex-none tw:px-3 tw:pt-1 tw:pb-3 tw:border-b tw:border-border" });
 
-  getViewType() {
-    return VIEW_CALENDAR;
-  }
-  getDisplayText() {
-    return "カレンダー";
-  }
-  getIcon() {
-    return "calendar";
+  constructor(private app: App) {
+    super();
   }
 
-  async onOpen() {
+  onload() {
+    // タブを切り替えても残るよう、左サイドバーの最初のタブ群の、アイコン行と中身の間に置く。
+    // タブを並べ替えると Obsidian が DOM を組み直すので、レイアウトが変わるたびに置き直す
+    const place = () => {
+      const tabs = this.app.workspace.containerEl.querySelector(".mod-left-split > .workspace-tabs");
+      const body = tabs?.querySelector(":scope > .workspace-tab-container");
+      if (tabs && body && this.el.nextElementSibling !== body) tabs.insertBefore(this.el, body);
+    };
+    this.registerEvent(this.app.workspace.on("layout-change", place));
+    place();
+
     const redraw = () => void this.render();
     this.registerEvent(this.app.vault.on("create", redraw));
     this.registerEvent(this.app.vault.on("delete", redraw));
@@ -93,17 +81,23 @@ export class CalendarView extends ItemView {
         }
       }, 60_000),
     );
-    await this.render();
+    void this.render();
+  }
+
+  onunload() {
+    this.el.remove();
   }
 
   private async render() {
     const d = await dailySettings(this.app);
     const active = dateOf(d, this.app.workspace.getActiveFile());
-    const el = this.contentEl;
+    const el = this.el;
     el.empty();
 
     const head = el.createDiv({ cls: "tw:flex tw:items-center tw:mb-2" });
-    head.createSpan({ text: this.month.format("YYYY年 M月"), cls: "tw:flex-1 tw:font-semibold" });
+    const title = head.createDiv({ cls: "tw:flex-1 tw:flex tw:items-baseline tw:gap-2" });
+    title.createSpan({ text: this.month.format("YYYY"), cls: "tw:text-sm tw:text-muted" });
+    title.createSpan({ text: this.month.format("M月"), cls: "tw:text-lg tw:font-semibold tw:text-purple" });
     const nav = (icon: string, label: string, to: () => Moment) => {
       const b = head.createDiv({ cls: "clickable-icon", attr: { "aria-label": label } });
       b.setText(icon);
@@ -127,23 +121,24 @@ export class CalendarView extends ItemView {
         cls: [
           "tw:py-1 tw:rounded tw:cursor-pointer tw:hover:bg-secondary",
           date.isSame(this.month, "month") ? "tw:text-muted" : "tw:text-faint",
-          date.isSame(moment(), "day") ? "tw:text-normal tw:font-bold" : "",
           active?.isSame(date, "day") ? "tw:bg-secondary" : "",
         ].join(" "),
       });
-      cell.createDiv({ text: String(date.date()) });
+      // 今日は紫の丸に白い数字
+      cell.createDiv({
+        text: String(date.date()),
+        cls: `tw:mx-auto tw:size-7 tw:grid tw:place-items-center tw:rounded-full ${
+          date.isSame(moment(), "day") ? "tw:bg-purple tw:text-white tw:font-semibold" : ""
+        }`,
+      });
       // ノートがある日だけ点を出す（ない日も同じ高さを取って並びを揃える）
-      cell.createDiv({ cls: `tw:mx-auto tw:size-1 tw:rounded-full ${file ? "tw:bg-muted" : ""}` });
-      cell.onclick = (evt) => this.open(d, date, Keymap.isModEvent(evt));
+      cell.createDiv({ cls: `tw:mx-auto tw:mt-1 tw:size-1 tw:rounded-full ${file ? "tw:bg-muted" : ""}` });
+      cell.onclick = (evt) => void this.openDaily(d, date, Keymap.isModEvent(evt));
     }
   }
 
-  private open(d: Daily, date: Moment, newTab: ReturnType<typeof Keymap.isModEvent>) {
-    const go = (f: TFile) => this.app.workspace.getLeaf(newTab).openFile(f);
+  private async openDaily(d: Daily, date: Moment, newTab: ReturnType<typeof Keymap.isModEvent>) {
     const file = this.app.vault.getAbstractFileByPath(pathOf(d, date));
-    if (file instanceof TFile) return void go(file);
-    new ConfirmModal(this.app, `${date.format(d.format)} のノートを作りますか？`, async () =>
-      go(await createDaily(this.app, d, date)),
-    ).open();
+    await this.app.workspace.getLeaf(newTab).openFile(file instanceof TFile ? file : await createDaily(this.app, d, date));
   }
 }

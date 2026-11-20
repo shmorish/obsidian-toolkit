@@ -1,8 +1,9 @@
 /* プラグインの UI 用。build.sh が Tailwind で変換して plugin/styles.css に置き、Obsidian が自動で読む。
-   preflight は Obsidian 本体の見た目を崩すので入れない。クラスは tw: 接頭辞つき（例: tw:flex）。 */
-@layer theme, utilities;
-@import "tailwindcss/theme.css" layer(theme) prefix(tw);
-@import "tailwindcss/utilities.css" layer(utilities);
+   preflight は Obsidian 本体の見た目を崩すので入れない。クラスは tw: 接頭辞つき（例: tw:flex）。
+   @layer に入れると、レイヤー外の Obsidian 本体の CSS に必ず負ける。レイヤーなしで出せば、詳細度が同じなら
+   後から読まれるこちらが勝つ（例: Obsidian の .workspace-tabs>* より tw:flex-none が勝つ）。 */
+@import "tailwindcss/theme.css" prefix(tw);
+@import "tailwindcss/utilities.css";
 
 /* 色は Obsidian の変数だけにして、テーマを替えたら追従させる（例: tw:text-muted, tw:bg-secondary） */
 @theme inline {
@@ -14,4 +15,7 @@
   --color-primary: var(--background-primary);
   --color-secondary: var(--background-secondary);
   --color-border: var(--background-modifier-border);
+  /* 差し色は Obsidian の紫 1 色だけ。上に載せる文字は白 */
+  --color-purple: var(--color-purple);
+  --color-white: #fff;
 }
