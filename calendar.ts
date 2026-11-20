@@ -1,5 +1,6 @@
 import { App, Component, Keymap, TFile, normalizePath } from "obsidian";
 import type { Moment } from "moment";
+import { askOneOnOne } from "./oneonone";
 import { fill, moment } from "./templates";
 
 // 左サイドバーの一番上（アイコン行の下、フォルダ一覧の上）に埋め込む月カレンダー。日付をクリックすると、その日の Daily ノートを開く（なければ作る）。
@@ -123,6 +124,9 @@ export class Calendar extends Component {
       cell.createDiv({ cls: `tw:mx-auto tw:mt-1 tw:size-1 tw:rounded-full ${file ? "tw:bg-muted" : ""}` });
       cell.onclick = (evt) => void this.openDaily(d, date, Keymap.isModEvent(evt));
     }
+
+    const oneOnOne = el.createEl("button", { text: "＋ 1on1", cls: "tw:mt-3 tw:w-full" });
+    oneOnOne.onclick = () => askOneOnOne(this.app);
   }
 
   private async openDaily(d: Daily, date: Moment, newTab: ReturnType<typeof Keymap.isModEvent>) {

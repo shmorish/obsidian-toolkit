@@ -8,6 +8,7 @@
 |---|---|
 | `main.ts`, `manifest.json` | 自作プラグイン `toolkit` |
 | `calendar.ts` | 左サイドバーの一番上に埋め込む月カレンダー。日付をクリックするとその日の Daily ノートを開く（なければ作る） |
+| `oneonone.ts` | カレンダーの下の「＋ 1on1」ボタン。相手の名前を聞いて、`03_Notes/01_仕事/1on1/` に今日の 1on1 ノートを作って開く（テンプレートは `90_Templates/1on1`） |
 | `templates.ts` | フォルダごとのテンプレート。指定したフォルダに空のノートを作ると、テンプレートの中身を入れる（対応はファイル内の `FOLDER_TEMPLATES`） |
 | `autogit.ts` | Vault の自動バックアップ。起動時に pull し、1 分ごとに変更があれば commit → pull → push する。コマンド「git: 今すぐバックアップ」「git: pull」もある |
 | `styles.css` | `toolkit` の UI 用 CSS。Tailwind で変換する |
