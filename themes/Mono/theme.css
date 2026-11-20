@@ -4,7 +4,8 @@ body {
   --font-interface-theme: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
   --font-text-theme: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
   --font-monospace-theme: "SF Mono", Menlo, monospace;
-  --file-line-width: 42rem;
+  --file-line-width: 56rem;
+  --list-indent: 1.125em; /* 読み取り表示のリストの段差を 2.25em → 半分に。編集画面の段差は app.json の tabSize */
   --line-height-normal: 1.7;
   --h1-size: 1.6em;
   --h2-size: 1.35em;
