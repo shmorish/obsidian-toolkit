@@ -40,6 +40,7 @@ body {
   --nav-item-background-active: transparent;
   --nav-item-weight-active: 600;
   --nav-indentation-guide-color: transparent;
+  --nav-item-children-margin-start: 4px; /* 階層の段差を 16px → 8px に */
   --nav-collapse-icon-color: var(--text-faint);
 }
 
