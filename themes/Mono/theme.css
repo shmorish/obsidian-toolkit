@@ -236,3 +236,19 @@ body {
   --metadata-display-editing: none;
   --metadata-display-reading: none;
 }
+
+/* Retrospective（Monthly の Keep / Problem / Try）は callout で書き、Tasks の一覧と同じ紫の細い枠のカードにする。アイコンは出さず、タイトルの文字だけにする */
+.callout:is([data-callout="keep"], [data-callout="problem"], [data-callout="try"]) {
+  --callout-color: var(--color-purple-rgb);
+  --callout-padding: 10px 16px;
+  --callout-title-weight: 600;
+  border: 1px solid color-mix(in oklch, var(--color-purple) 35%, transparent);
+  border-radius: 10px;
+  background-color: color-mix(in oklch, var(--color-purple) 5%, transparent);
+}
+.callout:is([data-callout="keep"], [data-callout="problem"], [data-callout="try"]) .callout-content > ul {
+  margin-block: 4px 0;
+}
+.callout:is([data-callout="keep"], [data-callout="problem"], [data-callout="try"]) .callout-icon {
+  display: none;
+}
