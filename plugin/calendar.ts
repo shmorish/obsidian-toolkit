@@ -35,6 +35,22 @@ async function createDaily(app: App, d: Daily, date: Moment): Promise<TFile> {
   return app.vault.create(path, tpl ? fill(await app.vault.read(tpl), date.format(d.format), date, d.format) : "");
 }
 
+// Monthly ノートは 02_Monthly/YYYY-MM.md。なければテンプレートを、その月の日付で埋めて作る
+// （空で作るとフォルダのテンプレートが今日の日付で埋めてしまうので、中身つきで作る）
+const MONTHLY_FOLDER = "02_Monthly";
+const MONTHLY_TEMPLATE = "90_Templates/Monthly";
+
+async function openMonthly(app: App, month: Moment, newTab: ReturnType<typeof Keymap.isModEvent>) {
+  const path = normalizePath(`${MONTHLY_FOLDER}/${month.format("YYYY-MM")}.md`);
+  let file = app.vault.getAbstractFileByPath(path);
+  if (!(file instanceof TFile)) {
+    if (!app.vault.getAbstractFileByPath(MONTHLY_FOLDER)) await app.vault.createFolder(MONTHLY_FOLDER);
+    const tpl = app.metadataCache.getFirstLinkpathDest(MONTHLY_TEMPLATE, "");
+    file = await app.vault.create(path, tpl ? fill(await app.vault.read(tpl), month.format("YYYY-MM"), month) : "");
+  }
+  await app.workspace.getLeaf(newTab).openFile(file as TFile);
+}
+
 export class Calendar extends Component {
   private month = moment().startOf("month");
   private el = createDiv({ cls: "tw:flex-none tw:px-3 tw:pt-1 tw:pb-3 tw:border-b tw:border-border" });
@@ -84,9 +100,15 @@ export class Calendar extends Component {
     el.empty();
 
     const head = el.createDiv({ cls: "tw:flex tw:items-center tw:mb-2" });
-    const title = head.createDiv({ cls: "tw:flex-1 tw:flex tw:items-baseline tw:gap-2" });
+    // 年月を押すと、その月の Monthly ノートを開く
+    const title = head.createDiv({ cls: "tw:flex-1" }).createDiv({
+      cls: "tw:inline-flex tw:items-baseline tw:gap-2 tw:cursor-pointer",
+      attr: { "aria-label": "この月の Monthly を開く" },
+    });
     title.createSpan({ text: this.month.format("YYYY"), cls: "tw:text-sm tw:text-muted" });
     title.createSpan({ text: this.month.format("M月"), cls: "tw:text-lg tw:font-semibold tw:text-purple" });
+    const month = this.month.clone();
+    title.onclick = (evt) => void openMonthly(this.app, month, Keymap.isModEvent(evt));
     const nav = (icon: string, label: string, to: () => Moment) => {
       const b = head.createDiv({ cls: "clickable-icon", attr: { "aria-label": label } });
       b.setText(icon);
