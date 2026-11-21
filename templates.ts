@@ -8,7 +8,7 @@ export const moment = obsidianMoment as unknown as typeof import("moment");
 // 重なるときは深いフォルダの指定を使う
 const FOLDER_TEMPLATES: Record<string, string> = {
   "01_Daily": "90_Templates/Daily",
-  "02_Projects": "90_Templates/Project",
+  "02_Monthly": "90_Templates/Monthly",
 };
 
 // コアのテンプレートと同じく {{date}} {{time}} {{title}} と {{date:形式}} {{time:形式}} を埋める
