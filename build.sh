@@ -5,7 +5,7 @@ set -eu
 out=$1
 rm -rf "${out:?}/plugin" "$out/themes"
 mkdir -p "$out/plugin"
-esbuild main.ts --bundle --packages=external --format=cjs --target=es2022 --charset=utf8 --outfile="$out/plugin/main.js" --log-level=warning
-tailwindcss -i styles.css -o "$out/plugin/styles.css" --minify
-cp manifest.json "$out/plugin/"
+esbuild plugin/main.ts --bundle --packages=external --format=cjs --target=es2022 --charset=utf8 --outfile="$out/plugin/main.js" --log-level=warning
+tailwindcss -i plugin/styles.css -o "$out/plugin/styles.css" --minify
+cp plugin/manifest.json "$out/plugin/"
 cp -R themes "$out/"

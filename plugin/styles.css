@@ -1,4 +1,4 @@
-/* プラグインの UI 用。build.sh が Tailwind で変換して plugin/styles.css に置き、Obsidian が自動で読む。
+/* プラグインの UI 用。build.sh が Tailwind で変換して dist/plugin/styles.css に置き、Obsidian が自動で読む。
    preflight は Obsidian 本体の見た目を崩すので入れない。クラスは tw: 接頭辞つき（例: tw:flex）。
    @layer に入れると、レイヤー外の Obsidian 本体の CSS に必ず負ける。レイヤーなしで出せば、詳細度が同じなら
    後から読まれるこちらが勝つ（例: Obsidian の .workspace-tabs>* より tw:flex-none が勝つ）。 */
