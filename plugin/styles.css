@@ -19,3 +19,73 @@
   --color-purple: var(--color-purple);
   --color-white: #fff;
 }
+
+/* habits の表。Obsidian の表の罫線と余白を外して、マス目だけにする */
+.toolkit-habits :is(th, td) {
+  border: none;
+  padding: 2px 8px;
+  min-width: 0;
+  font-size: var(--font-ui-smaller);
+  font-weight: normal;
+  background: none;
+  text-align: center;
+}
+.toolkit-habits td:first-child {
+  text-align: left;
+  white-space: nowrap;
+}
+.toolkit-habits .toolkit-habits-highlight {
+  text-align: left;
+  padding-left: 16px;
+}
+
+/* habits のマス。斜線（1）か塗りつぶし（2）で埋める */
+.toolkit-habit {
+  --ink: color-mix(in oklch, var(--color-purple) 85%, transparent);
+  width: 18px;
+  height: 18px;
+  margin-inline: auto;
+  border: 1px solid var(--background-modifier-border);
+}
+.toolkit-habit-today {
+  border-color: var(--color-purple);
+}
+.toolkit-habit-1 {
+  border-color: var(--ink);
+  background: repeating-linear-gradient(45deg, var(--ink) 0 1.5px, transparent 1.5px 4px);
+}
+.toolkit-habit-2 {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+/* 習慣名の下に引くマーカー。目標は青、生活は黄色。蛍光ペンで少し斜めに引いたように見せる */
+.toolkit-habit-name {
+  padding-inline: 2px;
+  white-space: nowrap;
+}
+.toolkit-habit-name:is(.goal, .life) {
+  background: linear-gradient(-2deg, transparent 15%, var(--marker) 15% 45%, transparent 45%) no-repeat bottom / 100% 100%;
+  border-radius: 2px 6px 3px 8px;
+}
+.toolkit-habit-name.goal {
+  --marker: color-mix(in oklch, var(--color-blue) 55%, transparent);
+}
+.toolkit-habit-name.life {
+  --marker: color-mix(in oklch, var(--color-yellow) 55%, transparent);
+}
+
+/* 満足度の天気。晴れるほど紫を濃くする */
+.toolkit-weather {
+  display: grid;
+  place-items: center;
+  --icon-size: 18px;
+  color: var(--text-faint);
+}
+.toolkit-weather:is(.s4, .s5) {
+  color: var(--color-purple);
+}
+/* Daily で選んだ天気 */
+.toolkit-weather.on {
+  color: var(--color-purple);
+}

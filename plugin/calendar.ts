@@ -7,7 +7,7 @@ import { fill, moment } from "./templates";
 // Daily ノートの置き場所・名前の形式・テンプレートは、コアの「デイリーノート」の設定をそのまま使う
 type Daily = { folder: string; format: string; template: string };
 
-async function dailySettings(app: App): Promise<Daily> {
+export async function dailySettings(app: App): Promise<Daily> {
   let s: Partial<Daily> = {};
   try {
     s = JSON.parse(await app.vault.adapter.read(`${app.vault.configDir}/daily-notes.json`));
@@ -17,7 +17,7 @@ async function dailySettings(app: App): Promise<Daily> {
   return { folder: s.folder ?? "", format: s.format || "YYYY-MM-DD", template: s.template ?? "" };
 }
 
-const pathOf = (d: Daily, date: Moment) => normalizePath(`${d.folder}/${date.format(d.format)}.md`);
+export const pathOf = (d: Daily, date: Moment) => normalizePath(`${d.folder}/${date.format(d.format)}.md`);
 
 // 開いているノートが Daily ならその日付。Daily でなければ null
 function dateOf(d: Daily, file: TFile | null): Moment | null {
