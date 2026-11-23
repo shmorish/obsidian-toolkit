@@ -1,5 +1,5 @@
-import { Keymap, Plugin, TFile, setIcon } from "obsidian";
-import { dailySettings, pathOf } from "./calendar";
+import { App, Keymap, MarkdownRenderChild, Plugin, TFile, setIcon } from "obsidian";
+import { MONTHLY_FOLDER, dailySettings, pathOf } from "./calendar";
 import { moment } from "./templates";
 
 // Monthly ノートの ```habits ブロックを「習慣 × 日付」の表にする。マスは手で塗るように、
@@ -13,7 +13,8 @@ import { moment } from "./templates";
 //   早起き:
 //   ```
 // 月はノート名（YYYY-MM）から取る。右にはその日の Daily の「Highlight of the Day」（押すと Daily を開く）と、
-// Daily のプロパティ satisfaction（1〜5 の満足度）を天気のアイコンで出す（1 が雷、5 が晴れ）
+// Daily のプロパティ satisfaction（1〜5 の満足度）を天気のアイコンで出す（1 が雷、5 が晴れ）。
+// Daily に空の ```habits ブロックを置くと、その月の Monthly の習慣を並べ、その日の分だけ押して入れられる（記録は Monthly に書く）
 const WEATHER = ["cloud-lightning", "cloud-rain", "cloud", "cloud-sun", "sun"];
 
 type Habit = { name: string; days: Map<number, number>; line: number; group: string };
@@ -52,6 +53,24 @@ const serialize = (h: Habit) =>
     .map(([d, level]) => (level === 2 ? `${d}:2` : d))
     .join(" ")}`.trimEnd();
 
+// 習慣が 1 つ変わったら、ノートの最初の ```habits ブロックの中のその行だけを書き換える
+const HABITS_BLOCK = /^```habits\n([\s\S]*?)^```/m;
+const save = (app: App, file: TFile, h: Habit) =>
+  app.vault.process(file, (text) =>
+    text.replace(HABITS_BLOCK, (all, body: string) => {
+      const lines = body.split("\n");
+      lines[h.line] = serialize(h);
+      return "```habits\n" + lines.join("\n") + "```";
+    }),
+  );
+
+// 空 → 斜線 → 塗りつぶし → 空
+function cycle(h: Habit, d: number) {
+  const level = h.days.get(d) ?? 0;
+  level === 2 ? h.days.delete(d) : h.days.set(d, level + 1);
+  return h.days.get(d) ?? 0;
+}
+
 export function registerHabits(plugin: Plugin) {
   const { app } = plugin;
 
@@ -74,28 +93,56 @@ export function registerHabits(plugin: Plugin) {
     paint(app.metadataCache.getFileCache(file)?.frontmatter?.satisfaction ?? null);
   });
   plugin.registerMarkdownCodeBlockProcessor("habits", async (src, el, ctx) => {
-    const habits = parse(src);
     const name = ctx.sourcePath.split("/").pop()!.replace(/\.md$/, "");
+    const daily = await dailySettings(app);
+
+    // Daily なら、その月の Monthly の習慣をその日の分だけ並べる
+    const date = moment(name, daily.format, true);
+    if (date.isValid() && pathOf(daily, date) === ctx.sourcePath) {
+      const monthly = app.vault.getFileByPath(`${MONTHLY_FOLDER}/${date.format("YYYY-MM")}.md`);
+      let body = monthly && (await app.vault.read(monthly)).match(HABITS_BLOCK)?.[1];
+      if (!monthly || body == null) return void el.createDiv({ text: "今月の Monthly に習慣がない", cls: "tw:text-faint" });
+      const draw = (body: string) => {
+        el.empty();
+        const row = el.createDiv({ cls: "tw:flex tw:flex-wrap tw:gap-x-5 tw:gap-y-2" });
+        for (const h of parse(body)) {
+          const item = row.createDiv({ cls: "tw:flex tw:items-center tw:gap-2 tw:cursor-pointer" });
+          const cell = item.createDiv({ cls: `toolkit-habit toolkit-habit-${h.days.get(date.date()) ?? 0}` });
+          item.createSpan({ text: h.name, cls: `toolkit-habit-name ${h.group}` });
+          item.onclick = () => {
+            cell.className = `toolkit-habit toolkit-habit-${cycle(h, date.date())}`;
+            void save(app, monthly, h);
+          };
+        }
+      };
+      draw(body);
+      // Monthly 側で押されたり習慣が書き換わったりしたら描き直す（ブロックが消えたら止める）
+      const child = new MarkdownRenderChild(el);
+      child.registerEvent(
+        app.vault.on("modify", async (f) => {
+          if (f !== monthly) return;
+          const next = (await app.vault.read(monthly)).match(HABITS_BLOCK)?.[1];
+          if (next != null && next !== body) draw((body = next));
+        }),
+      );
+      ctx.addChild(child);
+      return;
+    }
+
+    const habits = parse(src);
     const month = moment(name, "YYYY-MM", true);
-    if (!month.isValid()) return void el.createDiv({ text: "habits は YYYY-MM.md のノートで使う", cls: "tw:text-faint" });
+    if (!month.isValid()) return void el.createDiv({ text: "habits は Monthly（YYYY-MM.md）か Daily のノートで使う", cls: "tw:text-faint" });
     if (!habits.length) return void el.createDiv({ text: "1 行に 1 つ習慣を書く（例: 早起き）", cls: "tw:text-faint" });
 
     const today = moment();
     const n = month.daysInMonth();
     const days = Array.from({ length: n }, (_, i) => month.clone().date(i + 1));
 
-    // 押したらブロックの中のその習慣の行を書き換える。Obsidian が描き直すので表はそのまま作り直される
-    const toggle = async (h: Habit, d: number) => {
-      const level = h.days.get(d) ?? 0;
-      level === 2 ? h.days.delete(d) : h.days.set(d, level + 1);
-      const info = ctx.getSectionInfo(el);
+    // 押したらその習慣の行を書き換える。Obsidian が描き直すので表はそのまま作り直される
+    const toggle = (h: Habit, d: number) => {
+      cycle(h, d);
       const file = app.vault.getFileByPath(ctx.sourcePath);
-      if (!info || !file) return;
-      await app.vault.process(file, (text) => {
-        const lines = text.split("\n");
-        lines[info.lineStart + 1 + h.line] = serialize(h);
-        return lines.join("\n");
-      });
+      if (file) void save(app, file, h);
     };
 
     // 行が日付、列が習慣。今日の行は紫、土日は薄く
@@ -105,7 +152,6 @@ export function registerHabits(plugin: Plugin) {
     for (const h of habits) head.createEl("th").createSpan({ text: h.name, cls: `toolkit-habit-name ${h.group}` });
     head.createEl("th", { cls: "toolkit-habits-highlight" }).createSpan({ text: "Highlight", cls: "tw:text-muted" });
     head.createEl("th").createSpan({ text: "Weather", cls: "tw:text-muted" });
-    const daily = await dailySettings(app);
 
     const body = table.createEl("tbody");
     for (const d of days) {
@@ -119,7 +165,7 @@ export function registerHabits(plugin: Plugin) {
         const level = h.days.get(d.date()) ?? 0;
         const cell = tr.createEl("td", { cls: "tw:cursor-pointer", attr: { "aria-label": `${h.name} ${d.format("M/D")}` } });
         cell.createDiv({ cls: `toolkit-habit toolkit-habit-${level} ${isToday ? "toolkit-habit-today" : ""}` });
-        cell.onclick = () => void toggle(h, d.date());
+        cell.onclick = () => toggle(h, d.date());
       }
       const file = app.vault.getAbstractFileByPath(pathOf(daily, d));
       const hl = tr.createEl("td", { cls: "toolkit-habits-highlight" });

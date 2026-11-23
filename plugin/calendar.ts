@@ -37,7 +37,7 @@ async function createDaily(app: App, d: Daily, date: Moment): Promise<TFile> {
 
 // Monthly ノートは 02_Monthly/YYYY-MM.md。なければテンプレートを、その月の日付で埋めて作る
 // （空で作るとフォルダのテンプレートが今日の日付で埋めてしまうので、中身つきで作る）
-const MONTHLY_FOLDER = "02_Monthly";
+export const MONTHLY_FOLDER = "02_Monthly";
 const MONTHLY_TEMPLATE = "90_Templates/Monthly";
 
 async function openMonthly(app: App, month: Moment, newTab: ReturnType<typeof Keymap.isModEvent>) {
