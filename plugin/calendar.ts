@@ -1,5 +1,6 @@
 import { App, Component, Keymap, TFile, normalizePath } from "obsidian";
 import type { Moment } from "moment";
+import { holidays } from "./holidays";
 import { askOneOnOne } from "./oneonone";
 import { fill, moment } from "./templates";
 
@@ -94,7 +95,7 @@ export class Calendar extends Component {
   }
 
   private async render() {
-    const d = await dailySettings(this.app);
+    const [d, holiday] = await Promise.all([dailySettings(this.app), holidays()]);
     const active = dateOf(d, this.app.workspace.getActiveFile());
     const el = this.el;
     el.empty();
@@ -122,16 +123,22 @@ export class Calendar extends Component {
     nav("›", "次の月", () => this.month.clone().add(1, "month"));
 
     const grid = el.createDiv({ cls: "tw:grid tw:grid-cols-7 tw:gap-y-1 tw:text-center tw:text-sm" });
-    for (const w of moment.weekdaysMin(true)) grid.createDiv({ text: w, cls: "tw:text-faint tw:text-xs" });
+    // 土曜は青、日曜と祝日は赤（前後の月の日は薄いまま）
+    const tint = (day: number) => (day === 0 ? "tw:text-red" : day === 6 ? "tw:text-blue" : "");
+    moment.weekdaysMin(true).forEach((w, i) =>
+      grid.createDiv({ text: w, cls: `tw:text-xs ${tint(moment().weekday(i).day()) || "tw:text-faint"}` }),
+    );
 
     const end = this.month.clone().endOf("month").endOf("week");
     for (const day = this.month.clone().startOf("week"); day.isSameOrBefore(end, "day"); day.add(1, "day")) {
       const date = day.clone();
       const file = this.app.vault.getAbstractFileByPath(pathOf(d, date));
+      const name = holiday[date.format("YYYY-MM-DD")];
       const cell = grid.createDiv({
+        attr: name ? { "aria-label": name } : {},
         cls: [
           "tw:py-1 tw:rounded tw:cursor-pointer tw:hover:bg-secondary",
-          date.isSame(this.month, "month") ? "tw:text-muted" : "tw:text-faint",
+          !date.isSame(this.month, "month") ? "tw:text-faint" : name ? "tw:text-red" : tint(date.day()) || "tw:text-muted",
           active?.isSame(date, "day") ? "tw:bg-secondary" : "",
         ].join(" "),
       });

@@ -1,5 +1,6 @@
 import { App, Keymap, MarkdownRenderChild, Plugin, TFile, setIcon } from "obsidian";
 import { MONTHLY_FOLDER, dailySettings, pathOf } from "./calendar";
+import { holidays } from "./holidays";
 import { moment } from "./templates";
 
 // Monthly ノートの ```habits ブロックを「習慣 × 日付」の表にする。マスは手で塗るように、
@@ -145,7 +146,8 @@ export function registerHabits(plugin: Plugin) {
       if (file) void save(app, file, h);
     };
 
-    // 行が日付、列が習慣。今日の行は紫、土日は薄く
+    // 行が日付、列が習慣。今日の行は紫、土曜は青、日曜と祝日は赤（カレンダーと同じ）
+    const holiday = await holidays();
     const table = el.createEl("table", { cls: "toolkit-habits tw:text-sm tw:border-collapse" });
     const head = table.createEl("thead").createEl("tr");
     head.createEl("th");
@@ -159,7 +161,13 @@ export function registerHabits(plugin: Plugin) {
       const isToday = d.isSame(today, "day");
       tr.createEl("td").createSpan({
         text: d.format("D ddd"),
-        cls: isToday ? "tw:text-purple tw:font-semibold" : d.day() === 0 || d.day() === 6 ? "tw:text-faint" : "tw:text-muted",
+        cls: isToday
+          ? "tw:text-purple tw:font-semibold"
+          : holiday[d.format("YYYY-MM-DD")] || d.day() === 0
+            ? "tw:text-red"
+            : d.day() === 6
+              ? "tw:text-blue"
+              : "tw:text-muted",
       });
       for (const h of habits) {
         const level = h.days.get(d.date()) ?? 0;

@@ -17,6 +17,9 @@
   --color-border: var(--background-modifier-border);
   /* 差し色は Obsidian の紫 1 色だけ。上に載せる文字は白 */
   --color-purple: var(--color-purple);
+  /* カレンダーの土曜と日曜・祝日だけに使う */
+  --color-red: var(--color-red);
+  --color-blue: var(--color-blue);
   --color-white: #fff;
 }
 
