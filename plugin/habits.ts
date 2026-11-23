@@ -65,6 +65,13 @@ const save = (app: App, file: TFile, h: Habit) =>
     }),
   );
 
+// 習慣名。「朝勉強 30m」のように空白のあとに目安があれば、名前にだけマーカーを引き、目安は小さく添える（表では下の段）
+function label(parent: HTMLElement, h: Habit, stacked: boolean) {
+  const [, name, note] = h.name.match(/^(.*?)(?:\s+(\S+))?$/)!;
+  parent.createSpan({ text: name, cls: `toolkit-habit-name ${h.group}` });
+  if (note) parent.createEl(stacked ? "div" : "span", { text: note, cls: "tw:text-xs tw:text-faint" });
+}
+
 // 空 → 斜線 → 塗りつぶし → 空
 function cycle(h: Habit, d: number) {
   const level = h.days.get(d) ?? 0;
@@ -109,7 +116,7 @@ export function registerHabits(plugin: Plugin) {
         for (const h of parse(body)) {
           const item = row.createDiv({ cls: "tw:flex tw:items-center tw:gap-2 tw:cursor-pointer" });
           const cell = item.createDiv({ cls: `toolkit-habit toolkit-habit-${h.days.get(date.date()) ?? 0}` });
-          item.createSpan({ text: h.name, cls: `toolkit-habit-name ${h.group}` });
+          label(item, h, false);
           item.onclick = () => {
             cell.className = `toolkit-habit toolkit-habit-${cycle(h, date.date())}`;
             void save(app, monthly, h);
@@ -151,7 +158,7 @@ export function registerHabits(plugin: Plugin) {
     const table = el.createEl("table", { cls: "toolkit-habits tw:text-sm tw:border-collapse" });
     const head = table.createEl("thead").createEl("tr");
     head.createEl("th");
-    for (const h of habits) head.createEl("th").createSpan({ text: h.name, cls: `toolkit-habit-name ${h.group}` });
+    for (const h of habits) label(head.createEl("th"), h, true);
     head.createEl("th", { cls: "toolkit-habits-highlight" }).createSpan({ text: "Highlight", cls: "tw:text-muted" });
     head.createEl("th").createSpan({ text: "Weather", cls: "tw:text-muted" });
 
