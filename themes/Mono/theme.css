@@ -231,6 +231,35 @@ body {
   color: var(--color-purple);
   font-size: var(--font-ui-medium);
 }
+/* Daily の Task Board は毎日目に入るので、枠・カード・見出しの余白を詰めて、件数の行も出さない */
+.daily .block-language-tasks {
+  padding: 6px 10px;
+}
+.daily .plugin-tasks-query-result {
+  gap: 2px;
+  margin-block: 0;
+}
+.daily .plugin-tasks-query-result:empty::before {
+  content: "なし";
+  padding-inline: 8px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+.daily .plugin-tasks-query-result .plugin-tasks-list-item {
+  padding: 3px 8px;
+  background-color: transparent;
+}
+.daily .plugin-tasks-query-result .plugin-tasks-list-item:hover {
+  background-color: var(--background-secondary);
+}
+.daily .block-language-tasks .task-count {
+  display: none;
+}
+.daily h3,
+.daily .HyperMD-header-3 {
+  margin-block: 12px 4px;
+}
+
 /* 見た目を切り替えるための cssclasses しか持たないので、Daily ではプロパティ欄を出さない */
 .daily {
   --metadata-display-editing: none;

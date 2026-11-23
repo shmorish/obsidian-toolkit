@@ -92,3 +92,19 @@
 .toolkit-weather.on {
   color: var(--color-purple);
 }
+
+/* Monthly の Weekly。Retrospective と同じ紫の細い枠のカードを週ごとに並べる */
+.toolkit-week {
+  margin-bottom: 8px;
+  padding: 8px 16px;
+  border: 1px solid color-mix(in oklch, var(--color-purple) 35%, transparent);
+  border-radius: 10px;
+}
+.toolkit-week-title {
+  font-size: var(--font-ui-small);
+  font-weight: 600;
+  color: var(--color-purple);
+}
+.toolkit-week ul {
+  margin-block: 4px 0;
+}

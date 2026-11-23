@@ -11,8 +11,10 @@ const FOLDER_TEMPLATES: Record<string, string> = {
   "02_Monthly": "90_Templates/Monthly",
 };
 
-// コアのテンプレートと同じく {{date}} {{time}} {{title}} と {{date:形式}} {{time:形式}} を埋める
+// コアのテンプレートと同じく {{date}} {{time}} {{title}} と {{date:形式}} {{time:形式}} を埋める。
+// {{#friday}}〜{{/friday}} の中は、金曜のノートにだけ残す（Daily の Weekly Review 用）
 export function fill(text: string, title: string, date: Moment, dateFormat = "YYYY-MM-DD"): string {
+  text = text.replace(/{{#friday}}\n?([\s\S]*?){{\/friday}}\n?/g, (_, inner: string) => (date.day() === 5 ? inner : ""));
   return text.replace(/{{\s*(date|time|title)\s*(?::(.*?))?\s*}}/gi, (_, key: string, fmt?: string) => {
     key = key.toLowerCase();
     if (key === "title") return title;
@@ -33,7 +35,9 @@ export function registerFolderTemplates(plugin: Plugin) {
           .sort((a, b) => b.length - a.length)[0];
         const tpl = folder && app.metadataCache.getFirstLinkpathDest(FOLDER_TEMPLATES[folder], "");
         if (!tpl) return;
-        const text = fill(await app.vault.read(tpl), file.basename, moment());
+        // ノート名が日付（Daily）ならその日、ほかは今日で埋める
+        const named = moment(file.basename, "YYYY-MM-DD", true);
+        const text = fill(await app.vault.read(tpl), file.basename, named.isValid() ? named : moment());
         // 中身つきで作られたノート（カレンダーやコアのデイリーノートから作ったもの）には触らない
         await app.vault.process(file, (data) => (data === "" ? text : data));
       }),

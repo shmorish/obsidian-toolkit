@@ -1,7 +1,7 @@
 {
   "id": "toolkit",
   "name": "Toolkit",
-  "version": "0.6.9",
+  "version": "0.7.0",
   "minAppVersion": "1.14.0",
   "description": "community プラグインの代わりに、自分で使う機能だけをまとめたプラグイン",
   "author": "shmorish",
