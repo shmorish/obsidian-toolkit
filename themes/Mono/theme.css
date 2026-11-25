@@ -224,6 +224,11 @@ body {
 .block-language-tasks .task-count {
   margin-top: 4px;
 }
+/* ライブプレビューの埋め込み枠ははみ出したものを切るので、一番上のタスクの上に出る Tasks のツールチップが見切れる。Tasks の枠だけ切らないようにする */
+.markdown-source-view.mod-cm6 .cm-content > .cm-embed-block.cm-lang-tasks {
+  overflow: visible;
+  contain: none !important;
+}
 
 /* Daily（cssclasses: daily のノート）では、Today などの見出しも紫にする */
 .daily h3,
